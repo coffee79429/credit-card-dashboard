@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="금융위원회 공공데이터 API 기반 국내 신용카드사 비교 대시보드" />
+  <title>카드사 비교 | 공공데이터 대시보드</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">FINANCIAL SERVICES COMMISSION · OPEN DATA</p>
+      <h1>국내 신용카드사 현황</h1>
+      <p>공공데이터 API의 최신 응답으로 카드사의 재무·영업 지표를 한눈에 비교합니다.</p>
+    </header>
+
+    <section class="controls" aria-label="데이터 조회 설정">
+      <label class="field key-field">
+        <span>공공데이터포털 서비스키</span>
+        <input id="serviceKey" type="password" autocomplete="off" placeholder="서비스키를 입력하세요" />
+        <small>키는 이 조회에만 사용되며 저장하지 않습니다.</small>
+      </label>
+      <label class="field">
+        <span>기준년월</span>
+        <input id="basYm" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" value="200612" aria-describedby="monthHelp" />
+        <small id="monthHelp">예: 200612 · API 제공 기준년월</small>
+      </label>
+      <button id="loadButton" type="button">실제 데이터 조회</button>
+    </section>
+
+    <section id="notice" class="notice info" role="status">
+      서비스키와 기준년월을 입력하면 금융위원회 API에서 데이터를 불러옵니다.
+    </section>
+
+    <section class="summary" aria-label="조회 요약">
+      <article><span>조회 카드사</span><strong id="companyCount">—</strong></article>
+      <article><span>기준년월</span><strong id="summaryMonth">—</strong></article>
+      <article><span>데이터 상태</span><strong id="dataState">대기 중</strong></article>
+    </section>
+
+    <section class="panel chart-panel" aria-labelledby="chartTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">COMPARISON</p>
+          <h2 id="chartTitle">주요 영업실적 비교</h2>
+        </div>
+        <p id="chartUnit" class="unit">실제 응답값 기준</p>
+      </div>
+      <div id="chart" class="chart empty" aria-live="polite">조회한 데이터가 여기에 표시됩니다.</div>
+    </section>
+
+    <section class="panel history-panel" aria-labelledby="historyTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">TREND</p>
+          <h2 id="historyTitle">카드사별 영업실적 변화</h2>
+        </div>
+        <p class="unit">총계 이용실적 · 연도별 집계</p>
+      </div>
+      <div class="history-controls" aria-label="영업실적 변화 조회 설정">
+        <label class="field">
+          <span>시작 연도</span>
+          <input id="historyStart" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" value="2023" />
+        </label>
+        <label class="field">
+          <span>종료 연도</span>
+          <input id="historyEnd" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" value="2026" />
+        </label>
+        <div class="field company-filter-field">
+          <span>카드사 복수 선택</span>
+          <div id="companyFilters" class="company-filters" aria-live="polite"><span class="filter-placeholder">기간 데이터를 조회해 주세요</span></div>
+          <small>여러 카드사를 체크하면 한 그래프에서 비교합니다.</small>
+        </div>
+        <button id="historyButton" type="button">연도별 그래프 조회</button>
+      </div>
+      <p id="historyNotice" class="history-note">기준 연도는 내부적으로 1월~12월 범위로 변환해 조회합니다.</p>
+      <div id="historyChart" class="line-chart empty" aria-live="polite">연도와 카드사를 선택하면 변화 그래프가 표시됩니다.</div>
+    </section>
+
+    <section class="panel" aria-labelledby="tableTitle">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">DETAIL</p>
+          <h2 id="tableTitle">카드사별 상세 현황</h2>
+        </div>
+        <p class="unit">금액은 API 원단위 그대로 표시</p>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>카드사명</th>
+              <th>기준년월</th>
+              <th>주요 영업실적</th>
+              <th>자산</th>
+              <th>부채</th>
+              <th>자기자본</th>
+              <th>연체율</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="empty-cell">조회한 데이터가 없습니다.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <footer>
+      출처: 금융위원회 「금융통계신용카드사정보」 · API 응답에 없는 항목은 표시하지 않습니다.
+    </footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
