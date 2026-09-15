@@ -30,6 +30,23 @@ ALLOWED_TITLES = {
 history_cache: list[dict] | None = None
 
 
+def load_local_env() -> None:
+    """Load a local .env file without adding an external dependency."""
+    env_file = ROOT / ".env"
+    if not env_file.is_file():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        if "=" not in line or line.lstrip().startswith("#"):
+            continue
+        name, value = line.split("=", 1)
+        if name.strip():
+            os.environ.setdefault(name.strip(), value.strip())
+
+
+load_local_env()
+DEFAULT_SERVICE_KEY = os.environ.get("DATA_GO_KR_SERVICE_KEY", "").strip()
+
+
 def api_request(endpoint: str, parameters: dict[str, str]) -> tuple[int, bytes]:
     """일시적인 게이트웨이 오류만 재시도합니다."""
     url = f"{API_BASE}{endpoint}?{urlencode(parameters, quote_via=quote)}"
@@ -114,14 +131,15 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         title = query.get("title", [""])[0]
         key = query.get("key", [""])[0]
         bas_ym = query.get("basYm", [""])[0]
-        if ALLOWED_TITLES.get(endpoint) != title or not key or not (len(bas_ym) == 6 and bas_ym.isdigit()):
+        service_key = unquote(key).strip() if key else DEFAULT_SERVICE_KEY
+        if ALLOWED_TITLES.get(endpoint) != title or not service_key or not (len(bas_ym) == 6 and bas_ym.isdigit()):
             self.send_json(400, {"error": "허용된 endpoint, title, key, basYm(YYYYMM)이 필요합니다."})
             return
         try:
             # 브라우저가 보낸 Encoding 키를 한 번만 풀어 API 요청에서 재인코딩합니다.
             status, body = api_request(endpoint, {
                 "pageNo": "1", "numOfRows": "1000", "resultType": "json",
-                "serviceKey": unquote(key), "title": title, "basYm": bas_ym,
+                "serviceKey": service_key, "title": title, "basYm": bas_ym,
             })
             self.send_api_response(status, body)
         except RuntimeError as error:
@@ -131,11 +149,12 @@ class DashboardHandler(SimpleHTTPRequestHandler):
         key = query.get("key", [""])[0]
         start = query.get("start", [""])[0]
         end = query.get("end", [""])[0]
-        if not key or not (len(start) == len(end) == 6 and start.isdigit() and end.isdigit() and start <= end):
+        service_key = unquote(key).strip() if key else DEFAULT_SERVICE_KEY
+        if not service_key or not (len(start) == len(end) == 6 and start.isdigit() and end.isdigit() and start <= end):
             self.send_json(400, {"error": "key, start(YYYYMM), end(YYYYMM)이 필요합니다."})
             return
         try:
-            items = [item for item in get_history(unquote(key)) if start <= item.get("basYm", "") <= end]
+            items = [item for item in get_history(service_key) if start <= item.get("basYm", "") <= end]
             self.send_json(200, {"items": items})
         except RuntimeError as error:
             self.send_json(502, {"error": str(error)})

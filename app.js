@@ -172,7 +172,6 @@ async function loadHistory() {
   const key = keyInput.value.trim();
   const startYear = historyStart.value.trim();
   const endYear = historyEnd.value.trim();
-  if (!key) return setHistoryNotice('먼저 공공데이터포털 서비스키를 입력해 주세요.', true);
   if (!isValidYear(startYear) || !isValidYear(endYear) || startYear > endYear) return setHistoryNotice('시작·종료 연도를 YYYY 형식으로, 시작이 종료보다 앞서게 입력해 주세요.', true);
   const start = `${startYear}01`;
   const end = `${endYear}12`;
@@ -278,12 +277,11 @@ function renderChart(companies) {
 async function loadData() {
   const key = keyInput.value.trim();
   const basYm = monthInput.value.trim();
-  if (!key) return setNotice('공공데이터포털에서 발급받은 서비스키를 입력해 주세요.', 'error');
   if (!/^\d{6}$/.test(basYm)) return setNotice('기준년월은 YYYYMM 형식의 숫자 6자리여야 합니다.', 'error');
 
   loadButton.disabled = true;
   loadButton.textContent = '조회 중…';
-  setNotice('금융위원회 API에서 재무현황·주요경영지표·주요영업활동을 조회하고 있습니다.', 'info');
+  setNotice(key ? '금융위원회 API에서 재무현황·주요경영지표·주요영업활동을 조회하고 있습니다.' : '서버의 비밀 환경설정에 저장된 서비스키로 조회하고 있습니다.', 'info');
   try {
     const settled = await Promise.allSettled(DATASETS.map(dataset => loadEndpoint(dataset, key, basYm)));
     const failed = settled.filter(result => result.status === 'rejected');
